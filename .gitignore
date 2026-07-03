@@ -12,3 +12,6 @@ wheels/
 # Secrets and runtime state
 .env
 state.json
+
+# Claude
+.claude/
