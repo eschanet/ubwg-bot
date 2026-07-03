@@ -1,3 +1,4 @@
+import importlib
 import json
 
 import pytest
@@ -129,6 +130,26 @@ def test_heartbeat_message_out_of_stock():
     assert main.heartbeat_message(False) == (
         "UBWG monitor heartbeat: product is currently out of stock."
     )
+
+
+def test_config_defaults():
+    assert main.PRODUCT_URL == "https://ubwg.ch/product/ubwg-member-1-jahr-aktuell/"
+    assert main.CHECK_INTERVAL_SECONDS == 120
+    assert main.FAILURE_ALERT_THRESHOLD == 5
+
+
+def test_config_overridable_via_env_vars(monkeypatch):
+    monkeypatch.setenv("PRODUCT_URL", "https://example.com/product")
+    monkeypatch.setenv("CHECK_INTERVAL_SECONDS", "30")
+    monkeypatch.setenv("FAILURE_ALERT_THRESHOLD", "2")
+
+    try:
+        importlib.reload(main)
+        assert main.PRODUCT_URL == "https://example.com/product"
+        assert main.CHECK_INTERVAL_SECONDS == 30
+        assert main.FAILURE_ALERT_THRESHOLD == 2
+    finally:
+        importlib.reload(main)
 
 
 def test_load_state_returns_default_when_missing(monkeypatch, tmp_path):

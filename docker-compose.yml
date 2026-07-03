@@ -7,6 +7,9 @@ services:
     environment:
       - TELEGRAM_BOT_TOKEN
       - TELEGRAM_CHAT_ID
+      - PRODUCT_URL
+      - CHECK_INTERVAL_SECONDS
+      - FAILURE_ALERT_THRESHOLD
     volumes:
       - ./state.json:/app/state.json
     restart: unless-stopped

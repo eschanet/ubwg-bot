@@ -20,6 +20,16 @@ TELEGRAM_BOT_TOKEN=
 TELEGRAM_CHAT_ID=
 ```
 
+### Configuration
+
+All values below are optional and fall back to the defaults shown if unset:
+
+| Env var | Default | Description |
+| --- | --- | --- |
+| `PRODUCT_URL` | `https://ubwg.ch/product/ubwg-member-1-jahr-aktuell/` | Product page to monitor |
+| `CHECK_INTERVAL_SECONDS` | `120` | Seconds between checks |
+| `FAILURE_ALERT_THRESHOLD` | `5` | Consecutive failed checks before sending a "monitoring may be broken" alert |
+
 ## Running
 
 ```bash
@@ -33,10 +43,16 @@ Last known stock status is persisted to `state.json` next to `main.py`, so resta
 ## Running with Docker
 
 ```bash
-docker compose up -d --build
+docker compose up -d
 ```
 
-Reads secrets from `.env`, persists `state.json` on the host, and restarts automatically (`restart: unless-stopped`). View logs with `docker compose logs -f`; stop with `docker compose down`.
+Pulls the published image from `ghcr.io/eschanet/ubwg-bot`, persists `state.json` on the host, and restarts automatically (`restart: unless-stopped`). View logs with `docker compose logs -f`; stop with `docker compose down`.
+
+`.env` is optional here — `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, and any of the config vars above can instead be exported in your shell before running `docker compose up`, which takes precedence over `.env` if both are set:
+
+```bash
+TELEGRAM_BOT_TOKEN=xxx TELEGRAM_CHAT_ID=yyy docker compose up -d
+```
 
 ## Tests
 

@@ -10,10 +10,12 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-PRODUCT_URL = "https://ubwg.ch/product/ubwg-member-1-jahr-aktuell/"
-CHECK_INTERVAL_SECONDS = 120
+PRODUCT_URL = os.environ.get(
+    "PRODUCT_URL", "https://ubwg.ch/product/ubwg-member-1-jahr-aktuell/"
+)
+CHECK_INTERVAL_SECONDS = int(os.environ.get("CHECK_INTERVAL_SECONDS", "120"))
 STATE_FILE = Path(__file__).parent / "state.json"
-FAILURE_ALERT_THRESHOLD = 5
+FAILURE_ALERT_THRESHOLD = int(os.environ.get("FAILURE_ALERT_THRESHOLD", "5"))
 
 TELEGRAM_BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 TELEGRAM_CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
