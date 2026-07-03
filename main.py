@@ -50,6 +50,11 @@ def save_state(state: dict) -> None:
     STATE_FILE.write_text(json.dumps(state))
 
 
+def heartbeat_message(in_stock: bool) -> str:
+    status = "in stock" if in_stock else "out of stock"
+    return f"UBWG monitor heartbeat: product is currently {status}."
+
+
 def check_stock() -> bool:
     """Returns True if the product is in stock, False if out of stock.
     Raises on network/parse failure."""
@@ -81,6 +86,11 @@ def main() -> None:
         try:
             in_stock = check_stock()
             state["consecutive_failures"] = 0
+
+            try:
+                send_telegram_message(heartbeat_message(in_stock))
+            except Exception as heartbeat_exc:
+                log.error("Failed to send heartbeat: %s", heartbeat_exc)
 
             if in_stock and not state["in_stock"]:
                 log.info("Product is now IN STOCK - sending alert")

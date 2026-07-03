@@ -1,8 +1,12 @@
 services:
   ubwg-bot:
-    build: .
+    image: ghcr.io/eschanet/ubwg-bot:0.0.1
     env_file:
-      - .env
+      - path: .env
+        required: false
+    environment:
+      - TELEGRAM_BOT_TOKEN
+      - TELEGRAM_CHAT_ID
     volumes:
       - ./state.json:/app/state.json
     restart: unless-stopped

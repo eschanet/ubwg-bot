@@ -119,6 +119,18 @@ def test_send_telegram_message_raises_on_failure(monkeypatch):
         main.send_telegram_message("hello world")
 
 
+def test_heartbeat_message_in_stock():
+    assert main.heartbeat_message(True) == (
+        "UBWG monitor heartbeat: product is currently in stock."
+    )
+
+
+def test_heartbeat_message_out_of_stock():
+    assert main.heartbeat_message(False) == (
+        "UBWG monitor heartbeat: product is currently out of stock."
+    )
+
+
 def test_load_state_returns_default_when_missing(monkeypatch, tmp_path):
     monkeypatch.setattr(main, "STATE_FILE", tmp_path / "state.json")
     assert main.load_state() == {"in_stock": False, "consecutive_failures": 0}
