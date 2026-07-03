@@ -1,6 +1,6 @@
 services:
   ubwg-bot:
-    image: ghcr.io/eschanet/ubwg-bot:0.0.1
+    image: ghcr.io/eschanet/ubwg-bot:0.0.2
     env_file:
       - path: .env
         required: false
