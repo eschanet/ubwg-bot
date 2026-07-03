@@ -1,0 +1,11 @@
+.venv
+.git
+.env
+.env.example
+state.json
+__pycache__
+.pytest_cache
+tests
+.DS_Store
+Dockerfile
+.dockerignore

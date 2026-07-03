@@ -1,0 +1,8 @@
+services:
+  ubwg-bot:
+    build: .
+    env_file:
+      - .env
+    volumes:
+      - ./state.json:/app/state.json
+    restart: unless-stopped
