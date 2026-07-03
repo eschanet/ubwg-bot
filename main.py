@@ -16,6 +16,9 @@ PRODUCT_URL = os.environ.get(
 CHECK_INTERVAL_SECONDS = int(os.environ.get("CHECK_INTERVAL_SECONDS", "120"))
 STATE_FILE = Path(__file__).parent / "state.json"
 FAILURE_ALERT_THRESHOLD = int(os.environ.get("FAILURE_ALERT_THRESHOLD", "5"))
+HEARTBEAT_INTERVAL_SECONDS = int(
+    os.environ.get("HEARTBEAT_INTERVAL_SECONDS", str(60 * 60))
+)
 
 TELEGRAM_BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 TELEGRAM_CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
@@ -43,9 +46,10 @@ def send_telegram_message(text: str) -> None:
 
 
 def load_state() -> dict:
+    defaults = {"in_stock": False, "consecutive_failures": 0, "last_heartbeat_at": 0}
     if STATE_FILE.exists():
-        return json.loads(STATE_FILE.read_text())
-    return {"in_stock": False, "consecutive_failures": 0}
+        return {**defaults, **json.loads(STATE_FILE.read_text())}
+    return defaults
 
 
 def save_state(state: dict) -> None:
@@ -55,6 +59,10 @@ def save_state(state: dict) -> None:
 def heartbeat_message(in_stock: bool) -> str:
     status = "in stock" if in_stock else "out of stock"
     return f"UBWG monitor heartbeat: product is currently {status}."
+
+
+def is_heartbeat_due(last_heartbeat_at: float, now: float) -> bool:
+    return now - last_heartbeat_at >= HEARTBEAT_INTERVAL_SECONDS
 
 
 def check_stock() -> bool:
@@ -89,10 +97,13 @@ def main() -> None:
             in_stock = check_stock()
             state["consecutive_failures"] = 0
 
-            try:
-                send_telegram_message(heartbeat_message(in_stock))
-            except Exception as heartbeat_exc:
-                log.error("Failed to send heartbeat: %s", heartbeat_exc)
+            now = time.time()
+            if is_heartbeat_due(state["last_heartbeat_at"], now):
+                try:
+                    send_telegram_message(heartbeat_message(in_stock))
+                    state["last_heartbeat_at"] = now
+                except Exception as heartbeat_exc:
+                    log.error("Failed to send heartbeat: %s", heartbeat_exc)
 
             if in_stock and not state["in_stock"]:
                 log.info("Product is now IN STOCK - sending alert")

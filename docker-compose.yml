@@ -1,6 +1,6 @@
 services:
   ubwg-bot:
-    image: ghcr.io/eschanet/ubwg-bot:0.0.2
+    image: ghcr.io/eschanet/ubwg-bot:0.0.3
     env_file:
       - path: .env
         required: false
@@ -10,6 +10,7 @@ services:
       - PRODUCT_URL
       - CHECK_INTERVAL_SECONDS
       - FAILURE_ALERT_THRESHOLD
+      - HEARTBEAT_INTERVAL_SECONDS
     volumes:
       - ./state.json:/app/state.json
     restart: unless-stopped

@@ -1,3 +1,11 @@
+## v0.0.3
+
+### Added
+
+- `PRODUCT_URL`, `CHECK_INTERVAL_SECONDS`, and `FAILURE_ALERT_THRESHOLD` are now configurable via environment variables, defaulting to their previous hardcoded values.
+- The heartbeat is now throttled to once per `HEARTBEAT_INTERVAL_SECONDS` (default `3600`, i.e. 60 minutes) instead of firing on every check, cutting Telegram noise significantly. Last-sent time is tracked in `state.json` (`last_heartbeat_at`), which is backfilled automatically for state files created by older versions.
+- `docker-compose.yml` and `.env.example` updated with the new config vars; `docker-compose.yml` now pulls `ghcr.io/eschanet/ubwg-bot:0.0.3`.
+
 ## v0.0.2
 
 ### Added

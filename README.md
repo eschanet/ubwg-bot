@@ -2,7 +2,7 @@
 
 Polls the [UBWG membership product page](https://ubwg.ch/product/ubwg-member-1-jahr-aktuell/) every 2 minutes and sends a Telegram alert the moment it comes back in stock.
 
-Stock status is read from the page's WooCommerce markup: the JSON-LD `availability` field (`schema.org/InStock` / `OutOfStock`), falling back to the product's `instock` / `outofstock` CSS class if the JSON-LD isn't found. An alert is only sent on the out-of-stock → in-stock transition, so it won't spam you on every check while the item stays available. If the page fails to load 5 checks in a row, you get a one-time alert that monitoring may be broken.
+Stock status is read from the page's WooCommerce markup: the JSON-LD `availability` field (`schema.org/InStock` / `OutOfStock`), falling back to the product's `instock` / `outofstock` CSS class if the JSON-LD isn't found. An alert is only sent on the out-of-stock → in-stock transition, so it won't spam you on every check while the item stays available. If the page fails to load 5 checks in a row, you get a one-time alert that monitoring may be broken. A heartbeat message with the current status is also sent once per hour (configurable) so you can confirm the bot is alive.
 
 ## Setup
 
@@ -29,6 +29,7 @@ All values below are optional and fall back to the defaults shown if unset:
 | `PRODUCT_URL` | `https://ubwg.ch/product/ubwg-member-1-jahr-aktuell/` | Product page to monitor |
 | `CHECK_INTERVAL_SECONDS` | `120` | Seconds between checks |
 | `FAILURE_ALERT_THRESHOLD` | `5` | Consecutive failed checks before sending a "monitoring may be broken" alert |
+| `HEARTBEAT_INTERVAL_SECONDS` | `3600` (60 minutes) | Minimum time between heartbeat messages |
 
 ## Running
 

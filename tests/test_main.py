@@ -136,33 +136,75 @@ def test_config_defaults():
     assert main.PRODUCT_URL == "https://ubwg.ch/product/ubwg-member-1-jahr-aktuell/"
     assert main.CHECK_INTERVAL_SECONDS == 120
     assert main.FAILURE_ALERT_THRESHOLD == 5
+    assert main.HEARTBEAT_INTERVAL_SECONDS == 60 * 60
 
 
 def test_config_overridable_via_env_vars(monkeypatch):
     monkeypatch.setenv("PRODUCT_URL", "https://example.com/product")
     monkeypatch.setenv("CHECK_INTERVAL_SECONDS", "30")
     monkeypatch.setenv("FAILURE_ALERT_THRESHOLD", "2")
+    monkeypatch.setenv("HEARTBEAT_INTERVAL_SECONDS", "300")
 
     try:
         importlib.reload(main)
         assert main.PRODUCT_URL == "https://example.com/product"
         assert main.CHECK_INTERVAL_SECONDS == 30
         assert main.FAILURE_ALERT_THRESHOLD == 2
+        assert main.HEARTBEAT_INTERVAL_SECONDS == 300
     finally:
         importlib.reload(main)
 
 
+def test_is_heartbeat_due_when_never_sent():
+    assert main.is_heartbeat_due(last_heartbeat_at=0, now=main.HEARTBEAT_INTERVAL_SECONDS) is True
+
+
+def test_is_heartbeat_due_before_interval_elapsed():
+    assert main.is_heartbeat_due(last_heartbeat_at=1000, now=1000 + 60) is False
+
+
+def test_is_heartbeat_due_after_interval_elapsed():
+    assert (
+        main.is_heartbeat_due(last_heartbeat_at=1000, now=1000 + main.HEARTBEAT_INTERVAL_SECONDS)
+        is True
+    )
+
+
 def test_load_state_returns_default_when_missing(monkeypatch, tmp_path):
     monkeypatch.setattr(main, "STATE_FILE", tmp_path / "state.json")
-    assert main.load_state() == {"in_stock": False, "consecutive_failures": 0}
+    assert main.load_state() == {
+        "in_stock": False,
+        "consecutive_failures": 0,
+        "last_heartbeat_at": 0,
+    }
 
 
 def test_load_state_reads_existing_file(monkeypatch, tmp_path):
     state_file = tmp_path / "state.json"
+    state_file.write_text(
+        json.dumps(
+            {"in_stock": True, "consecutive_failures": 2, "last_heartbeat_at": 123}
+        )
+    )
+    monkeypatch.setattr(main, "STATE_FILE", state_file)
+
+    assert main.load_state() == {
+        "in_stock": True,
+        "consecutive_failures": 2,
+        "last_heartbeat_at": 123,
+    }
+
+
+def test_load_state_backfills_missing_last_heartbeat_at(monkeypatch, tmp_path):
+    state_file = tmp_path / "state.json"
     state_file.write_text(json.dumps({"in_stock": True, "consecutive_failures": 2}))
     monkeypatch.setattr(main, "STATE_FILE", state_file)
 
-    assert main.load_state() == {"in_stock": True, "consecutive_failures": 2}
+    assert main.load_state() == {
+        "in_stock": True,
+        "consecutive_failures": 2,
+        "last_heartbeat_at": 0,
+    }
 
 
 def test_save_state_writes_json(monkeypatch, tmp_path):
