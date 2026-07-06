@@ -19,6 +19,7 @@ FAILURE_ALERT_THRESHOLD = int(os.environ.get("FAILURE_ALERT_THRESHOLD", "5"))
 HEARTBEAT_INTERVAL_SECONDS = int(
     os.environ.get("HEARTBEAT_INTERVAL_SECONDS", str(60 * 60))
 )
+MAX_BACKOFF_SECONDS = int(os.environ.get("MAX_BACKOFF_SECONDS", str(60 * 60)))
 
 TELEGRAM_BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 TELEGRAM_CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
@@ -63,6 +64,15 @@ def heartbeat_message(in_stock: bool) -> str:
 
 def is_heartbeat_due(last_heartbeat_at: float, now: float) -> bool:
     return now - last_heartbeat_at >= HEARTBEAT_INTERVAL_SECONDS
+
+
+def compute_sleep_seconds(consecutive_failures: int) -> int:
+    """Normal interval below the failure-alert threshold; exponential backoff
+    (capped at MAX_BACKOFF_SECONDS) once it's reached."""
+    if consecutive_failures < FAILURE_ALERT_THRESHOLD:
+        return CHECK_INTERVAL_SECONDS
+    backoff_exponent = consecutive_failures - FAILURE_ALERT_THRESHOLD
+    return min(CHECK_INTERVAL_SECONDS * (2**backoff_exponent), MAX_BACKOFF_SECONDS)
 
 
 def check_stock() -> bool:
@@ -126,13 +136,19 @@ def main() -> None:
                     send_telegram_message(
                         "UBWG stock monitor: failed to load the product page "
                         f"{FAILURE_ALERT_THRESHOLD} times in a row. It may be "
-                        "down or blocking requests - please check."
+                        "down or blocking requests. Backing off exponentially "
+                        f"(up to {MAX_BACKOFF_SECONDS}s between checks) until "
+                        "it recovers."
                     )
                 except Exception as alert_exc:
                     log.error("Also failed to send failure alert: %s", alert_exc)
 
+        sleep_seconds = compute_sleep_seconds(state["consecutive_failures"])
+        if sleep_seconds > CHECK_INTERVAL_SECONDS:
+            log.info("Backing off for %ss before next check", sleep_seconds)
+
         save_state(state)
-        time.sleep(CHECK_INTERVAL_SECONDS)
+        time.sleep(sleep_seconds)
 
 
 if __name__ == "__main__":

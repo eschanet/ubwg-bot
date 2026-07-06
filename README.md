@@ -2,7 +2,9 @@
 
 Polls the [UBWG membership product page](https://ubwg.ch/product/ubwg-member-1-jahr-aktuell/) every 2 minutes and sends a Telegram alert the moment it comes back in stock.
 
-Stock status is read from the page's WooCommerce markup: the JSON-LD `availability` field (`schema.org/InStock` / `OutOfStock`), falling back to the product's `instock` / `outofstock` CSS class if the JSON-LD isn't found. An alert is only sent on the out-of-stock → in-stock transition, so it won't spam you on every check while the item stays available. If the page fails to load 5 checks in a row, you get a one-time alert that monitoring may be broken. A heartbeat message with the current status is also sent once per hour (configurable) so you can confirm the bot is alive.
+Stock status is read from the page's WooCommerce markup: the JSON-LD `availability` field (`schema.org/InStock` / `OutOfStock`), falling back to the product's `instock` / `outofstock` CSS class if the JSON-LD isn't found. An alert is only sent on the out-of-stock → in-stock transition, so it won't spam you on every check while the item stays available. A heartbeat message with the current status is also sent once per hour (configurable) so you can confirm the bot is alive.
+
+If checks start failing (page down, network issue, etc.), the bot retries at the normal interval for the first few failures. Once it hits `FAILURE_ALERT_THRESHOLD` consecutive failures, it sends a one-time Telegram alert and starts backing off exponentially between checks (doubling each time, capped at `MAX_BACKOFF_SECONDS`) until a check succeeds again — so it doesn't hammer the site while it's having trouble.
 
 ## Setup
 
@@ -30,6 +32,7 @@ All values below are optional and fall back to the defaults shown if unset:
 | `CHECK_INTERVAL_SECONDS` | `120` | Seconds between checks |
 | `FAILURE_ALERT_THRESHOLD` | `5` | Consecutive failed checks before sending a "monitoring may be broken" alert |
 | `HEARTBEAT_INTERVAL_SECONDS` | `3600` (60 minutes) | Minimum time between heartbeat messages |
+| `MAX_BACKOFF_SECONDS` | `3600` (60 minutes) | Cap on the exponential backoff delay once `FAILURE_ALERT_THRESHOLD` is reached |
 
 ## Running
 

@@ -137,6 +137,7 @@ def test_config_defaults():
     assert main.CHECK_INTERVAL_SECONDS == 120
     assert main.FAILURE_ALERT_THRESHOLD == 5
     assert main.HEARTBEAT_INTERVAL_SECONDS == 60 * 60
+    assert main.MAX_BACKOFF_SECONDS == 60 * 60
 
 
 def test_config_overridable_via_env_vars(monkeypatch):
@@ -144,6 +145,7 @@ def test_config_overridable_via_env_vars(monkeypatch):
     monkeypatch.setenv("CHECK_INTERVAL_SECONDS", "30")
     monkeypatch.setenv("FAILURE_ALERT_THRESHOLD", "2")
     monkeypatch.setenv("HEARTBEAT_INTERVAL_SECONDS", "300")
+    monkeypatch.setenv("MAX_BACKOFF_SECONDS", "900")
 
     try:
         importlib.reload(main)
@@ -151,8 +153,30 @@ def test_config_overridable_via_env_vars(monkeypatch):
         assert main.CHECK_INTERVAL_SECONDS == 30
         assert main.FAILURE_ALERT_THRESHOLD == 2
         assert main.HEARTBEAT_INTERVAL_SECONDS == 300
+        assert main.MAX_BACKOFF_SECONDS == 900
     finally:
         importlib.reload(main)
+
+
+def test_compute_sleep_seconds_below_threshold_uses_normal_interval():
+    for failures in range(main.FAILURE_ALERT_THRESHOLD):
+        assert main.compute_sleep_seconds(failures) == main.CHECK_INTERVAL_SECONDS
+
+
+def test_compute_sleep_seconds_doubles_once_threshold_reached():
+    at_threshold = main.compute_sleep_seconds(main.FAILURE_ALERT_THRESHOLD)
+    one_more = main.compute_sleep_seconds(main.FAILURE_ALERT_THRESHOLD + 1)
+    two_more = main.compute_sleep_seconds(main.FAILURE_ALERT_THRESHOLD + 2)
+
+    assert at_threshold == main.CHECK_INTERVAL_SECONDS
+    assert one_more == main.CHECK_INTERVAL_SECONDS * 2
+    assert two_more == main.CHECK_INTERVAL_SECONDS * 4
+
+
+def test_compute_sleep_seconds_caps_at_max_backoff():
+    assert main.compute_sleep_seconds(main.FAILURE_ALERT_THRESHOLD + 100) == (
+        main.MAX_BACKOFF_SECONDS
+    )
 
 
 def test_is_heartbeat_due_when_never_sent():

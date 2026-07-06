@@ -1,3 +1,11 @@
+## v0.1.0
+
+### Added
+
+- Exponential backoff on repeated check failures: once `FAILURE_ALERT_THRESHOLD` consecutive failures is reached, the delay between checks doubles each time (capped at `MAX_BACKOFF_SECONDS`, default 3600s) instead of retrying at the normal interval, so the bot backs off from a struggling or blocking site rather than hammering it.
+- The existing "monitoring may be broken" Telegram alert now fires exactly once, at the moment backoff begins, with text explaining that backoff is starting.
+- New `MAX_BACKOFF_SECONDS` env var; documented in `.env.example`, `docker-compose.yml`, and `README.md`.
+
 ## v0.0.3
 
 ### Added
