@@ -1,3 +1,13 @@
+## v0.1.1
+
+### Added
+
+- `HEARTBEAT_INTERVAL_SECONDS` can now be set to `-1` to disable heartbeat messages entirely.
+
+### Fixed
+
+- Fixed a test-suite bug where reload-based tests restored module state before the monkeypatched environment variables were unset, silently leaving stale config values leaked into later tests.
+
 ## v0.1.0
 
 ### Added

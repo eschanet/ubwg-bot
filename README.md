@@ -31,7 +31,7 @@ All values below are optional and fall back to the defaults shown if unset:
 | `PRODUCT_URL` | `https://ubwg.ch/product/ubwg-member-1-jahr-aktuell/` | Product page to monitor |
 | `CHECK_INTERVAL_SECONDS` | `120` | Seconds between checks |
 | `FAILURE_ALERT_THRESHOLD` | `5` | Consecutive failed checks before sending a "monitoring may be broken" alert |
-| `HEARTBEAT_INTERVAL_SECONDS` | `3600` (60 minutes) | Minimum time between heartbeat messages |
+| `HEARTBEAT_INTERVAL_SECONDS` | `3600` (60 minutes) | Minimum time between heartbeat messages; set to `-1` to disable heartbeats entirely |
 | `MAX_BACKOFF_SECONDS` | `3600` (60 minutes) | Cap on the exponential backoff delay once `FAILURE_ALERT_THRESHOLD` is reached |
 
 ## Running

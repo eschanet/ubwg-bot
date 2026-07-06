@@ -155,6 +155,7 @@ def test_config_overridable_via_env_vars(monkeypatch):
         assert main.HEARTBEAT_INTERVAL_SECONDS == 300
         assert main.MAX_BACKOFF_SECONDS == 900
     finally:
+        monkeypatch.undo()
         importlib.reload(main)
 
 
@@ -185,6 +186,16 @@ def test_is_heartbeat_due_when_never_sent():
 
 def test_is_heartbeat_due_before_interval_elapsed():
     assert main.is_heartbeat_due(last_heartbeat_at=1000, now=1000 + 60) is False
+
+
+def test_is_heartbeat_due_disabled_via_negative_one(monkeypatch):
+    monkeypatch.setenv("HEARTBEAT_INTERVAL_SECONDS", "-1")
+    try:
+        importlib.reload(main)
+        assert main.is_heartbeat_due(last_heartbeat_at=0, now=10**9) is False
+    finally:
+        monkeypatch.undo()
+        importlib.reload(main)
 
 
 def test_is_heartbeat_due_after_interval_elapsed():

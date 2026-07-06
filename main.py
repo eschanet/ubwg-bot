@@ -63,6 +63,8 @@ def heartbeat_message(in_stock: bool) -> str:
 
 
 def is_heartbeat_due(last_heartbeat_at: float, now: float) -> bool:
+    if HEARTBEAT_INTERVAL_SECONDS == -1:
+        return False
     return now - last_heartbeat_at >= HEARTBEAT_INTERVAL_SECONDS
 
 
